@@ -1,151 +1,52 @@
+from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework.parsers import JSONParser
 from darasa.models import Darasa
 from darasa.serializers import DarasaSerializer
-from rest_framework import status
-from rest_framework.response import Response
-from django.http import Http404
-from rest_framework.views import APIView
-from rest_framework import mixins
-from rest_framework import generics
 
 
-# @csrf_exempt
-# @api_view(['GET', 'POST'])
-# def darasa_list(request, format=None):
-#     """
-#     List all darasa codes, or create a new darasa
-#     """
-#     if request.method == 'GET':
-#         darasas = Darasa.objects.all()
-#         serializer = DarasaSerializer(darasas, many=True)
+@csrf_exempt
+def darasa_list(request):
+    """
+    List all code snippets, or create a new snippet.
+    """
+    if request.method == 'GET':
+        darasas = Darasa.objects.all()
+        serializer = DarasaSerializer(darasas, many=True)
+        return JsonResponse(serializer.data, safe=False)
 
-#         return Response(serializer.data)
+    elif request.method == 'POST':
+        data = JSONParser().parse(request)
+        serializer = DarasaSerializer(data=data)
 
-#     elif request.method == 'POST':
-#         serializer = DarasaSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse(serializer.data, status=201)
+        return JsonResponse(serializer.errors, status=400)
 
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(serializer.data, status=status.HTTP_201_CREATED)
-#         return Response(serilizer.errors, status=status.HTTP_400_BAD_REQUEST)
+@csrf_exempt
+def darasa_detail(request, pk):
+    """
+    Retrieve, update or delete a code snippet.
+    """
+    try:
+        darasa = Darasa.objects.get(pk=pk)
+    except Darasa.DoesNotExist:
+        return HttpResponse(status=404)
 
-# @csrf_exempt
-# @api_view(['GET', 'PUT', 'DELETE'])
-# def darasa_detail(request, pk, format=None):
-#     """
-#     Retrieve, update or delete a darasa code.
-#     """
+    if request.method == 'GET':
+        serializer = SnippetSerializer(darasa)
+        return JsonResponse(serializer.data)
 
-#     try:
-#         darasa = Darasa.objects.get(pk=pk)
-#     except Darasa.DoesNotExist:
-#         return Response(status=status.HTTP_404_NOT_FOUND)
+    elif request.method == 'PUT':
+        data = JSONParser().parse(request)
+        serializer = DarasaSerializer(darasa, data=data)
 
-#     if request.method == 'GET':
-#         serializer = DarasaSerializer(darasa)
-#         return Response(serializer.data)
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse(serializer.data)
+        return JsonResponse(serializer.errors, status=400)
 
-
-#     elif request.method == 'PUT':
-#         serializer = DarasaSerializer(darasa, data=request.data)
-
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(serializer.data)
-        
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-#     elif request.method == 'DELETE':
-#         darasa.delete()
-#         return Response(status=status.HTTP_204_NO_CONTENT)
-
-# class DarasaList(APIView):
-#     """
-#     List all darasas, or create a new darasa
-#     """
-#     def get(self, request, format=None):
-#         darasas = Darasa.objects.all()
-#         serializer = DarasaSerializer(darasas, many=True)
-
-#         return Response(serializer.data)
-
-#     def post(self, request, format=None):
-#         serializer = DarasaSerializer(data=request.data)
-
-#         if serializer.is_valid():
-#             serializer.save()
-
-#             return Response(serializer.data, status=status.HTTP_201_CREATED)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-
-# class DarasaDetail(APIView):
-#     """
-#     Retrieve, update or delete a darasa instance
-#     """
-#     def get_object(self, pk):
-#         try:
-#             return Darasa.objects.get(pk=pk)
-#         except Darasa.DoesNotExist:
-#             raise Http404
-
-#     def get(self, request, pk, format=None):
-#         darasa = slef.get_object(pk)
-#         serializer =  DarasaSerializer(darasa)
-
-#         return Response(serializer.data)
-
-#     def put(self, request, pk, format=None):
-#         darasa = self.get_object(pk)
-#         serializer = DarasaSerializer(darasa, data=request.data)
-
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(serializer.data)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-#     def delete(self, request, pk, format=None):
-#         darasa = self.get_object(pk)
-#         darasa.delete()
-#         return Response(status=status.HTTP_204_NO_CONTENT)
-
-# class DarasaList(mixins.ListModelMixin,
-#                 mixins.CreateModelMixin,
-#                 generics.GenericAPIView):
-    
-#     queryset = Darasa.objects.all()
-#     serializer_class = DarasaSerializer
-
-#     def get(self, request, *args, **kwargs):
-#         return self.list(request, *args, **kwargs)
-
-#     def post(self, request, *args, **kwargs):
-#         return self.create(request, *args, **kwargs)
-
-
-# class DarasaDetail(mixins.RetrieveModelMixin,
-#                     mixins.UpdateModelMixin,
-#                     mixins.DestroyModelMixin,
-#                     generics.GenericAPIView):
-    
-#     queryset = Darasa.objects.all()
-#     serializer_class = DarasaSerializer
-
-#     def get(self, request, *args, **kwargs):
-#         return self.retrieve(request, *args, **kwargs)
-
-#     def put(self, request, *args, **kwargs):
-#         return self.update(request, *args, **kwargs)
-
-#     def delete(self, request, *args, **kwargs):
-#         return self.destroy(request, *args, **kwargs)    
-
-
-class DarasaList(generics.ListCreateAPIView):
-    queryset = Darasa.objects.all()
-    serializer_class = DarasaSerializer
-
-class DarasaDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Darasa.objects.all()
-    serializer_class = Darasa.DarasaSerializer
-    
+    elif request.method == 'DELETE':
+        darasa.delete()
+        return HttpResponse(status=204)
