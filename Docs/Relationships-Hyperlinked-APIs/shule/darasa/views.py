@@ -3,13 +3,12 @@ from darasa.serializers import DarasaSerializer, UserSerializer
 from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
 from django.contrib.auth.models import User
-from rest_framework import generics
-from rest_framework import permissions
+from rest_framework import generics, renderers, permissions, status
 from darasa.permissions import IsOwnerOrReadOnly
 from rest_framework.decorators import api_view
 from rest_framework.reverse import reverse
+
 
 
 @api_view
@@ -95,7 +94,7 @@ class UserDetail(generics.RetrieveAPIView):
 class DarasaHighlight(generics.GenericAPIView):
     queryset = Darasa.objects.all()
     renderer_classes = [renderers.StaticHTMLRenderer]
-    
+
     def get(self, request, *args, **kwargs):
         darasa = self.get_object()
         return Response(darasa.highlighted)

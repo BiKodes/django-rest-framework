@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 
 class DarasaSerializer(serializers.HyperlinkedModelSerializer):
     owner = serializers.ReadOnlyField(source = 'owner.username')
-    highlight = serialiazers.HyperlinkedIdentityField(view_name='darasa-highlight', format='html')
+    highlight = serializers.HyperlinkedIdentityField(view_name='darasa-highlight', format='html')
 
     class Meta:
         model = Darasa
