@@ -1,7 +1,7 @@
 from django.urls import path, include
 from darasa import views
 from rest_framework.urlpatterns import format_suffix_patterns
-from darasa.views import DarasaViewSet, UserViewSet, api_root
+from darasa.views import DarasaViewSet, UserViewSet
 from rest_framework import renderers
 from rest_framework.routers import DefaultRouter
 
