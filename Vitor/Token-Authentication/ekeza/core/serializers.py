@@ -1,5 +1,14 @@
 from rest_framework import serializers
+
 from core.models import Currency, Category, Transaction
+
+from django.contrib.auth.models import User
+
+class ReadUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("id", "username", "first_name", "last_name")
+        read_only_fields = fields
 
 
 class CurrencySerializer(serializers.ModelSerializer):
@@ -8,9 +17,11 @@ class CurrencySerializer(serializers.ModelSerializer):
         fields = ("id", "code", "name")
 
 class CategorySerializer(serializers.ModelSerializer):
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
     class Meta:
         model =  Category
-        fields = ("id", "name")
+        fields = ("id", "name", "user")
 
 # class TransactionSerializer(serializers.ModelSerializer):
 #     currency = serializers.SlugRelatedField(slug_field="code", queryset=Currency.objects.all())
@@ -27,11 +38,13 @@ class CategorySerializer(serializers.ModelSerializer):
 #         )
 
 class WriteTransactionSerializer(serializers.ModelSerializer):
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
     currency = serializers.SlugRelatedField(slug_field="code", queryset=Currency.objects.all())
-    
+      
     class Meta:
         model = Transaction
         fields = (
+            "user",
             "amount",
             "currency",
             "date",
@@ -39,7 +52,14 @@ class WriteTransactionSerializer(serializers.ModelSerializer):
             "category" 
         )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        user = self.context["request"].user
+        self.fields["category"].queryset = user.categories.all()
+
+
 class ReadTransactionSerializer(serializers.ModelSerializer):
+    user = ReadUserSerializer()
     currency = CurrencySerializer()
     category = CategorySerializer()
     
@@ -51,7 +71,9 @@ class ReadTransactionSerializer(serializers.ModelSerializer):
             "currency",
             "date",
             "description",
-            "category" 
+            "category",
+            "user"
         )
 
         read_only_fields = fields
+
