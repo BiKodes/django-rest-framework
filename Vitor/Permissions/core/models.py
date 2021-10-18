@@ -27,5 +27,12 @@ class Transaction(models.Model):
     def __str__(self):
         return f"{self.amount} {self.currency.code} {self.date}"
 
+class AllowList(models.Model):
+    ip_address = models.GenericIPAddressField()
+
+    def __str__(self):
+        return self.ip_address
+    
+
     
     

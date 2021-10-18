@@ -1,15 +1,23 @@
 from rest_framework.generics import ListAPIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.filters import SearchFilter, OrderingFilter
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import (
+    IsAuthenticated, 
+    AllowAny, 
+    IsAuthenticatedOrReadOnly, 
+    DjangoModelPermissions
+)
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.renderers import JSONRenderer
+from rest_framework_xml.renderers import XMLRenderer
 
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth.models import User
 
 
 from core.models import Currency, Category, Transaction
+from core.permissions import IsAdminOrReadOnly, AllowedListPermission
 from core.serializers import ( 
     CurrencySerializer, 
     CategorySerializer, 
@@ -20,13 +28,15 @@ from core.serializers import (
 )
 from core.reports import transaction_report
 
-class CurrencyListAPIView(ListAPIView):
+class CurrencyModelViewSet(ModelViewSet):
+    permission_classes = (IsAdminOrReadOnly,)
     queryset = Currency.objects.all()
     serializer_class = CurrencySerializer
     pagination_class = None
+    renderer_classes = [JSONRenderer, XMLRenderer]
     
 class CategoryModelViewSet(ModelViewSet):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (DjangoModelPermissions | AllowedListPermission,)
     serializer_class = CategorySerializer
 
     def get_queryset(self):
@@ -38,7 +48,6 @@ class CategoryModelViewSet(ModelViewSet):
 #     serializer_class = TransactionSerializer
 
 class TransactionModelViewSet(ModelViewSet):
-    permission_classes = (IsAuthenticated,)
     # queryset = Transaction.objects.select_related("currency", "category", "user") #Returns all transactions in the db
     filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
     search_fields = ("description",)
@@ -58,7 +67,6 @@ class TransactionModelViewSet(ModelViewSet):
     #     serializer.save(user=self.request.user)
 
 class TransactionReportAPIView(APIView):
-    permission_classes = (IsAuthenticated,)
 
     def get(self, request):
         params_serializer = ReportParamsSerializer(data=request.GET, context={"request": request})
