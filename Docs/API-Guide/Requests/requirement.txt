@@ -1,0 +1,3 @@
+REQUEST PARSING
+
+---request.data returns the parsed content of the request body.
